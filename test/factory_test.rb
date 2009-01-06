@@ -1,7 +1,7 @@
 require(File.join(File.dirname(__FILE__), 'test_helper'))
 
 class FactoryTest < Test::Unit::TestCase
-
+factory = Factory.new(:post)
   context "defining a factory" do
     setup do
       @name    = :user
@@ -77,6 +77,24 @@ class FactoryTest < Test::Unit::TestCase
         @factory.add_attribute(:name, 'value') {}
       end
     end
+    
+    context "adding an attribute using a in-line sequence" do
+      should 'create the sequence' do
+        Factory::Sequence.
+          expects(:new)
+        @factory.sequence(:name) {}
+      end    
+      
+      should 'add a dynamic attribute' do
+        attr = mock('attribute', :name => :name)      
+        Factory::Attribute::Dynamic.
+          expects(:new).
+          with(:name, instance_of(Proc)).
+          returns(attr)        
+        @factory.sequence(:name) {}
+        assert @factory.attributes.include?(attr)
+      end
+    end    
 
     context "after adding an attribute" do
       setup do
@@ -159,6 +177,13 @@ class FactoryTest < Test::Unit::TestCase
       factory.association(:author, :factory => :user, :first_name => 'Ben')
       assert factory.attributes.include?(attr)
     end
+    
+    should "raise for a self referencing association" do
+      factory = Factory.new(:post)
+      assert_raise(Factory::AssociationDefinitionError) do
+        factory.association(:parent, :factory => :post)
+      end
+    end    
 
     should "add an attribute using the method name when passed an undefined method" do
       attr  = mock('attribute', :name => :name)
@@ -170,7 +195,7 @@ class FactoryTest < Test::Unit::TestCase
       @factory.send(:name, 'value')
       assert @factory.attributes.include?(attr)
     end
-
+    
     context "when overriding generated attributes with a hash" do
       setup do
         @attr  = :name
