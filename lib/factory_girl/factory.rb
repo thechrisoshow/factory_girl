@@ -172,6 +172,21 @@ class Factory
   def self.create (name, overrides = {})
     factory_by_name(name).run(Proxy::Create, overrides)
   end
+  
+  # Just like build, generates and returns an instance from this factory.
+  # However, this instance will automatically have the id stubbed, and new_record? 
+  # stubbed to false.
+  #
+  # Arguments:
+  #   overrides: (Hash)
+  #     See attributes_for
+  #
+  # Returns:
+  #   An instance of the class this factory generates, with generated
+  #   attributes assigned and stubbed id and new_record? attributes.
+  def self.stubbed_build (name, overrides = {})
+    factory_by_name(name).run(Proxy::StubbedBuild, overrides)    
+  end
 
   def self.find_definitions #:nodoc:
     definition_file_paths.each do |path|
